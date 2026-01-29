@@ -31,9 +31,12 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
 
-_allowed_default = 'localhost,127.0.0.1,advokat.cdcgroup.uz,advokatapi.cdcgroup.uz'
+_allowed_default = 'localhost,127.0.0.1,advokat.cdcgroup.uz,advokatapi.cdcgroup.uz,.cdcgroup.uz'
 _allowed = os.environ.get('DJANGO_ALLOWED_HOSTS', _allowed_default).strip()
 ALLOWED_HOSTS = [x.strip() for x in _allowed.split(',') if x.strip()] or _allowed_default.split(',')
+
+# Nginx/Certbot orqali HTTPS da proxy qilinganda Django uchun
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Application definition

@@ -11,7 +11,12 @@ export DJANGO_DEBUG=False
 
 echo "=== Paketlarni o'rnatish ==="
 apt update -y
-apt install -y git python3 python3-venv python3-pip nginx
+apt install -y git python3 python3-venv python3-pip nginx curl
+# Node.js 18.x (frontend build uchun)
+if ! command -v node >/dev/null 2>&1; then
+  curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+  apt install -y nodejs
+fi
 
 echo "=== Backend deploy ==="
 mkdir -p /opt

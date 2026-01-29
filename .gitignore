@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Backend
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+*.pyc
+*.pyo
+backend/db.sqlite3
+backend/.env
+.env
+.env.local
+.env.*.local
+
+# Frontend build (optional: comment out if you want to push dist)
+frontend/dist/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+*.log

@@ -53,6 +53,7 @@ User=${APP_USER}
 Group=${APP_USER}
 WorkingDirectory=${BACKEND_DIR}
 Environment="DJANGO_DEBUG=False"
+Environment="DJANGO_ALLOWED_HOSTS=advokat.cdcgroup.uz,advokatapi.cdcgroup.uz,.cdcgroup.uz,localhost,127.0.0.1"
 ExecStart=${BACKEND_DIR}/venv/bin/gunicorn config.wsgi:application --bind 127.0.0.1:8000
 Restart=always
 

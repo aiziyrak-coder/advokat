@@ -157,3 +157,18 @@ Agar **https://advokatapi.cdcgroup.uz** da 400 chiqsa, Django HTTPS orqali kelay
 1. **Backend** — Loyihada qo‘shilgan: `SECURE_PROXY_SSL_HEADER`, `ALLOWED_HOSTS` (.cdcgroup.uz). Serverni yangilang: `cd /opt/advokat && git pull`, keyin `sudo systemctl restart advokat-backend`.
 
 2. **Nginx** — **advokatapi** uchun `location /` ichida `proxy_set_header X-Forwarded-Proto $scheme;` bo‘lishi kerak. Agar certbot dan keyin bu qator yo‘q bo‘lsa: `sudo nano /etc/nginx/sites-available/advokat` — `advokatapi.cdcgroup.uz` server blokidagi `location /` da `proxy_set_header X-Forwarded-Proto $scheme;` qatorini qo‘shing. Saqlab: `sudo nginx -t && sudo systemctl reload nginx`.
+
+3. **400 hali bo‘lsa** — Backend logini ko‘ring (Django qaysi xatoni yozayotganini bilish uchun):
+   ```bash
+   sudo journalctl -u advokat-backend -n 80 --no-pager
+   ```
+   Systemd da ALLOWED_HOSTS aniq berilgan bo‘lishi kerak:
+   ```bash
+   sudo systemctl edit --full advokat-backend
+   ```
+   `[Service]` ostida qatorlar bo‘lsin:
+   ```ini
+   Environment="DJANGO_DEBUG=False"
+   Environment="DJANGO_ALLOWED_HOSTS=advokat.cdcgroup.uz,advokatapi.cdcgroup.uz,.cdcgroup.uz,localhost,127.0.0.1"
+   ```
+   Saqlab: `sudo systemctl daemon-reload && sudo systemctl restart advokat-backend`.

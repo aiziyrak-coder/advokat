@@ -1,53 +1,48 @@
 #!/bin/bash
+# Bitta repo: https://github.com/aiziyrak-coder/advokat
+# Server: /opt/advokat (backend + frontend)
+# Domenlar: https://advokat.cdcgroup.uz (frontend), https://advokatapi.cdcgroup.uz (backend)
 set -e
 
 APP_USER=root
-BACKEND_DIR=/opt/backend
-FRONTEND_DIR=/opt/frontend
-BACKEND_REPO=https://github.com/aiziyrak-coder/AdvokatB.git
-FRONTEND_REPO=https://github.com/aiziyrak-coder/AdvokatF.git
-SERVICE_NAME=advokat-backend
+REPO_URL="https://github.com/aiziyrak-coder/advokat.git"
+APP_DIR="/opt/advokat"
+BACKEND_DIR="${APP_DIR}/backend"
+FRONTEND_DIR="${APP_DIR}/frontend"
+SERVICE_NAME="advokat-backend"
 export DJANGO_DEBUG=False
 
 echo "=== Paketlarni o'rnatish ==="
 apt update -y
 apt install -y git python3 python3-venv python3-pip nginx curl
-# Node.js 18.x (frontend build uchun)
 if ! command -v node >/dev/null 2>&1; then
   curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
   apt install -y nodejs
 fi
 
-echo "=== Backend deploy ==="
+echo "=== Advokat repo (bitta) deploy ==="
 mkdir -p /opt
 cd /opt
 
-if [ -d "$BACKEND_DIR/.git" ]; then
-  echo "Backend yangilanmoqda..."
-  cd "$BACKEND_DIR" && git pull
+if [ -d "$APP_DIR/.git" ]; then
+  echo "Repo yangilanmoqda..."
+  cd "$APP_DIR" && git pull
 else
-  echo "Backend klon qilinmoqda..."
-  rm -rf "$BACKEND_DIR"
-  git clone "$BACKEND_REPO" "$BACKEND_DIR"
-  cd "$BACKEND_DIR"
+  echo "Repo klon qilinmoqda..."
+  rm -rf "$APP_DIR"
+  git clone "$REPO_URL" "$APP_DIR"
+  cd "$APP_DIR"
 fi
 
-echo "Virtual muhit yaratilmoqda..."
+echo "=== Backend ($BACKEND_DIR) ==="
+cd "$BACKEND_DIR"
 python3 -m venv venv
 source venv/bin/activate
-
-echo "Paketlar o'rnatilmoqda..."
 pip install --upgrade pip
-if [ -f requirements.txt ]; then
-  pip install -r requirements.txt
-else
-  pip install django djangorestframework djangorestframework-simplejwt django-cors-headers gunicorn
-fi
-
-echo "Migratsiya bajarilmoqda..."
+pip install -r requirements.txt
 python manage.py migrate
 
-echo "=== Gunicorn servis yaratilmoqda ==="
+echo "=== Gunicorn servis (advokat-backend) ==="
 cat >/etc/systemd/system/${SERVICE_NAME}.service << EOSVC
 [Unit]
 Description=Advokat Django backend
@@ -70,34 +65,18 @@ systemctl enable ${SERVICE_NAME}
 systemctl restart ${SERVICE_NAME}
 echo "Backend servis ishga tushirildi"
 
-echo "=== Frontend deploy ==="
-cd /opt
-if [ -d "$FRONTEND_DIR/.git" ]; then
-  echo "Frontend yangilanmoqda..."
-  cd "$FRONTEND_DIR" && git pull
-else
-  echo "Frontend klon qilinmoqda..."
-  rm -rf "$FRONTEND_DIR"
-  git clone "$FRONTEND_REPO" "$FRONTEND_DIR"
-  cd "$FRONTEND_DIR"
-fi
-
+echo "=== Frontend ($FRONTEND_DIR) ==="
+cd "$FRONTEND_DIR"
 if command -v npm >/dev/null 2>&1; then
-  echo "Frontend build qilinmoqda..."
-  if [ -f package-lock.json ]; then 
-    npm ci
-  else 
-    npm install
-  fi
+  npm ci
   npm run build
   echo "Frontend build tugadi"
 else
   echo "npm topilmadi, frontend build o'tkazildi"
 fi
 
-echo "=== Nginx sozlash ==="
+echo "=== Nginx (advokat.cdcgroup.uz, advokatapi.cdcgroup.uz) ==="
 rm -f /etc/nginx/sites-enabled/default
-
 cat >/etc/nginx/sites-available/advokat << 'NGINX'
 server {
     listen 80;
@@ -113,7 +92,7 @@ server {
 server {
     listen 80;
     server_name advokat.cdcgroup.uz;
-    root /opt/frontend/dist;
+    root /opt/advokat/frontend/dist;
     index index.html;
     location / {
         try_files $uri $uri/ /index.html;
@@ -124,12 +103,11 @@ NGINX
 ln -sf /etc/nginx/sites-available/advokat /etc/nginx/sites-enabled/advokat
 nginx -t
 systemctl reload nginx
-echo "Nginx sozlandi va qayta yuklandi"
+echo "Nginx sozlandi"
 
 echo ""
-echo "=== Deploy tugadi! ==="
+echo "=== Deploy tugadi ==="
 echo "Frontend: https://advokat.cdcgroup.uz"
-echo "Backend: https://advokatapi.cdcgroup.uz"
-echo ""
+echo "Backend:  https://advokatapi.cdcgroup.uz"
 echo "Backend holati:"
-systemctl status ${SERVICE_NAME} --no-pager -l | head -10
+systemctl status ${SERVICE_NAME} --no-pager -l | head -8

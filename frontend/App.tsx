@@ -123,8 +123,11 @@ const App: React.FC = () => {
                     await getCurrentUser();
                     setAuthToken(token); // Token faqat profil muvaffaqiyatli yuklangandan keyin o'rnatiladi
                     await loadCases();
-                } catch (e) {
-                    console.error("Auth check failed:", e);
+                } catch (e: any) {
+                    // 401 – sessiya yo'q yoki tugagan, odatiy holat
+                    if (e?.response?.status !== 401) {
+                        console.error("Auth check failed:", e);
+                    }
                     // Token eskirgan bo'lsa logout qilish kerak
                     // handleLogout ni bu yerda to'g'ridan-to'g'ri chaqira olmaymiz (useCallback dependency loop),
                     // shuning uchun manual tozalaymiz

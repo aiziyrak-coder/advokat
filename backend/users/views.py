@@ -33,6 +33,7 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class CustomTokenObtainPairView(TokenObtainPairView):
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
@@ -45,39 +46,51 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                     key='access_token',
                     value=access_token,
                     httponly=True,
-                    secure=settings.AUTH_COOKIE_SECURE,  # Use setting for secure
+                    secure=settings.AUTH_COOKIE_SECURE,
                     samesite='Lax',
-                    expires=timedelta(minutes=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds())
+                    max_age=int(settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds())
                 )
             if refresh_token:
                 response.set_cookie(
                     key='refresh_token',
                     value=refresh_token,
                     httponly=True,
-                    secure=settings.AUTH_COOKIE_SECURE,  # Use setting for secure
+                    secure=settings.AUTH_COOKIE_SECURE,
                     samesite='Lax',
-                    expires=timedelta(days=settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].days)
+                    max_age=int(settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds())
                 )
             return response
         return response
 
+@method_decorator(csrf_exempt, name='dispatch')
 class CustomTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
+        try:
+            response = super().post(request, *args, **kwargs)
+        except Exception as e:
+            return Response(
+                {'detail': 'Refresh token invalid or expired.'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         if response.status_code == 200:
             access_token = response.data.get('access')
             if access_token:
-                response.set_cookie(
-                    key='access_token',
-                    value=access_token,
-                    httponly=True,
-                    secure=settings.AUTH_COOKIE_SECURE,  # Use setting for secure
-                    samesite='Lax',
-                    expires=timedelta(minutes=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds())
-                )
+                try:
+                    access_seconds = settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds()
+                    response.set_cookie(
+                        key='access_token',
+                        value=access_token,
+                        httponly=True,
+                        secure=settings.AUTH_COOKIE_SECURE,
+                        samesite='Lax',
+                        max_age=int(access_seconds)
+                    )
+                except Exception:
+                    pass  # Cookie qo'shilmasa ham JSON javob qaytamiz
             return response
         return response
 
+@method_decorator(csrf_exempt, name='dispatch')
 class LogoutView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 

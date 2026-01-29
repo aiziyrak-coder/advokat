@@ -34,7 +34,11 @@ export const logout = async () => {
 export const refreshToken = async () => {
     const refreshTokenValue = Cookies.get('refresh_token');
     if (!refreshTokenValue) {
-        throw new Error("Refresh token not found");
+        Cookies.remove('access_token');
+        Cookies.remove('refresh_token');
+        const err = new Error("Refresh token not found");
+        (err as any).code = "REFRESH_NOT_FOUND";
+        throw err;
     }
     try {
         const response = await api.post('/auth/token/refresh/', {
@@ -47,7 +51,6 @@ export const refreshToken = async () => {
         }
         return response.data;
     } catch (error) {
-        // Agar refresh ham ishlamasa, logout qilamiz
         Cookies.remove('access_token');
         Cookies.remove('refresh_token');
         throw error;

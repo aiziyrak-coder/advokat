@@ -187,6 +187,21 @@ Agar **https://advokatapi.cdcgroup.uz** da 400 chiqsa, Django HTTPS orqali kelay
 
 2. **Nginx** — **advokatapi** uchun `location /` ichida `proxy_set_header X-Forwarded-Proto $scheme;` bo‘lishi kerak. Agar certbot dan keyin bu qator yo‘q bo‘lsa: `sudo nano /etc/nginx/sites-available/advokat` — `advokatapi.cdcgroup.uz` server blokidagi `location /` da `proxy_set_header X-Forwarded-Proto $scheme;` qatorini qo‘shing. Saqlab: `sudo nginx -t && sudo systemctl reload nginx`.
 
+---
+
+## 8. Login/Register da "Network Error" (ERR_NETWORK)
+
+Brauzerda **advokat.cdcgroup.uz** da login/register qilganda "Network Error" chiqsa:
+
+1. **Backend ishlayaptimi** — serverda: `sudo systemctl status advokat-backend`. Agar `active (running)` bo‘lmasa: `sudo systemctl restart advokat-backend`.
+2. **API javob bermayaptimi** — serverda yoki kompyuteringizda:
+   ```bash
+   curl -v -X POST https://advokatapi.cdcgroup.uz/api/auth/login/ -H "Content-Type: application/json" -d '{"username":"test","password":"test"}'
+   ```
+   Agar `Connection refused` yoki javob kelmasa — backend yoki Nginx muammosi. Nginx: `sudo nginx -t && sudo systemctl reload nginx`.
+3. **CORS** — Backendda `CORS_ALLOWED_ORIGINS` da `https://advokat.cdcgroup.uz` bo‘lishi kerak (loyihada qo‘shilgan). Kod yangilang: `cd /opt/advokat && git pull`, keyin backend qayta ishga tushiring.
+4. **Brauzerda** — F12 → Network: login so‘rovida qaysi URL ga borayapti va qanday javob (yoki xato) kelayapti — tekshiring.
+
 3. **400 hali bo‘lsa** — Backend logini ko‘ring (Django qaysi xatoni yozayotganini bilish uchun):
    ```bash
    sudo journalctl -u advokat-backend -n 80 --no-pager

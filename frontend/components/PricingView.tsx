@@ -88,6 +88,11 @@ export const PricingView: React.FC<PricingViewProps> = ({ onLogin, t, loginError
                 const data = await login(phone, token);
                 onLogin(data.access);
             } catch (err: any) {
+                if (err?.code === 'ERR_NETWORK' || err?.message === 'Network Error') {
+                    setLocalError('Backend ga ulanish imkonsiz. Internet yoki server holatini tekshiring.');
+                    setIsLoading(false);
+                    return;
+                }
                 console.error('Login error:', err?.response?.data || err);
                 let message = t('login_failed') || 'Login failed. Please check your credentials.';
                 const data = err?.response?.data;
@@ -162,6 +167,11 @@ export const PricingView: React.FC<PricingViewProps> = ({ onLogin, t, loginError
                 setToken('');
             }
         } catch (err: any) {
+            if (err?.code === 'ERR_NETWORK' || err?.message === 'Network Error') {
+                setLocalError('Backend ga ulanish imkonsiz. Internet yoki server holatini tekshiring.');
+                setIsLoading(false);
+                return;
+            }
             console.error('Register error:', err?.response?.data || err);
             let message = t('register_failed') || 'Registration failed. Try a different phone number.';
             const data = err?.response?.data;

@@ -109,6 +109,13 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    "authorization",
+    "content-type",
+    "accept",
+    "origin",
+    "x-requested-with",
+]
 _cors_extra = os.environ.get('CORS_ALLOWED_ORIGINS', '')
 if _cors_extra:
     CORS_ALLOWED_ORIGINS.extend(s.strip() for s in _cors_extra.split(',') if s.strip())

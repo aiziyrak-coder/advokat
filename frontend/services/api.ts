@@ -57,18 +57,21 @@ api.interceptors.response.use(
             originalRequest._retry = true;
             
             try {
-                // Token refresh qilamiz
                 await refreshToken();
-                // Yangi token bilan so'rovni qayta yuboramiz
                 const token = Cookies.get('access_token');
                 if (token) {
                     originalRequest.headers = originalRequest.headers || {};
                     originalRequest.headers['Authorization'] = `Bearer ${token}`;
                 }
                 return api(originalRequest);
-            } catch (refreshError) {
-                // Refresh ham ishlamasa, xatoni qaytaramiz
-                console.error("Token refresh failed:", refreshError);
+            } catch (refreshError: any) {
+                // Refresh yo'q, eskirgan yoki 401/500 – sessiya tugadi, login ekraniga o'tadi
+                const isExpected = refreshError?.code === "REFRESH_NOT_FOUND" ||
+                    refreshError?.message === "Refresh token not found" ||
+                    refreshError?.response?.status === 401;
+                if (!isExpected && refreshError?.response?.status !== 500) {
+                    console.warn("Token refresh failed:", refreshError?.message || refreshError);
+                }
                 return Promise.reject(error);
             }
         }

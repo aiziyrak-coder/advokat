@@ -58,13 +58,42 @@ pip install -r requirements.txt
 python manage.py migrate
 sudo systemctl restart advokat-backend
 
-# Frontend
+# Frontend (API kalit bilan build)
 cd /opt/advokat/frontend
 npm ci
+# Agar .env.production mavjud bo'lsa, undan o'qiadi; aks holda environment variable:
+export VITE_GEMINI_API_KEY='your_gemini_api_key_here'
 npm run build
 ```
 
 Nginx konfig o‘zgarmasa `reload` kerak emas; frontend yangi build avtomatik beriladi.
+
+---
+
+## 2.1. Frontend uchun Gemini API kalit sozlash
+
+Frontend buildda **VITE_GEMINI_API_KEY** kerak. Ikki usul:
+
+**Usul A: `.env.production` fayli (tavsiya)**
+
+```bash
+cd /opt/advokat/frontend
+cp .env.production.example .env.production
+nano .env.production
+# VITE_GEMINI_API_KEY=your_actual_api_key_here yozing
+```
+
+Keyin `npm run build` avtomatik `.env.production` dan o‘qiydi.
+
+**Usul B: Environment variable**
+
+```bash
+export VITE_GEMINI_API_KEY='your_gemini_api_key_here'
+cd /opt/advokat/frontend
+npm run build
+```
+
+**Eslatma:** API kalit build vaqtida kodga qo‘shiladi, shuning uchun har safar build qilganda qayta o‘rnatish kerak.
 
 ---
 

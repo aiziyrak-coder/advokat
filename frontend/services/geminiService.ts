@@ -11,11 +11,16 @@ import type {
   TimelineEvent,
 } from "../types";
 
-// Lokal: .env.local da VITE_GEMINI_API_KEY. Production: env yoki fallback.
+// Lokal: .env.local da VITE_GEMINI_API_KEY. Production: build vaqtida .env.production yoki environment variable.
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
 
 if (!GEMINI_API_KEY) {
-  throw new Error("GEMINI API kaliti topilmadi. Iltimos, VITE_GEMINI_API_KEY ni .env.local da sozlang.");
+  console.error("GEMINI API kaliti topilmadi. Frontend buildda VITE_GEMINI_API_KEY o'rnatilmagan.");
+  // Production da xato ko'rsatish o'rniga, foydalanuvchiga xabar berish
+  if (typeof window !== 'undefined') {
+    alert("GEMINI API kaliti topilmadi. Iltimos, administrator bilan bog'laning.");
+  }
+  throw new Error("GEMINI API kaliti topilmadi. Iltimos, VITE_GEMINI_API_KEY ni sozlang.");
 }
 
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });

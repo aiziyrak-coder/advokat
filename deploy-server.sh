@@ -70,6 +70,16 @@ echo "=== Frontend ($FRONTEND_DIR) ==="
 cd "$FRONTEND_DIR"
 if command -v npm >/dev/null 2>&1; then
   npm ci
+  # Production build uchun VITE_GEMINI_API_KEY o'rnatish
+  # Agar .env.production mavjud bo'lsa, undan o'qiadi; aks holda environment variable dan
+  if [ -f .env.production ]; then
+    echo "Frontend build: .env.production faylidan API kalit olinmoqda..."
+  elif [ -n "$VITE_GEMINI_API_KEY" ]; then
+    echo "Frontend build: VITE_GEMINI_API_KEY environment variable dan olinmoqda..."
+  else
+    echo "OGOHLANTIRISH: VITE_GEMINI_API_KEY topilmadi. Frontend buildda API kalit bo'lmasligi mumkin."
+    echo "  Serverni build qilishdan oldin: export VITE_GEMINI_API_KEY='your_key' yoki .env.production yarating."
+  fi
   npm run build
   echo "Frontend build tugadi"
 else
